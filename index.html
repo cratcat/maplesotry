@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>별빛 모험가 - 횡스크롤 RPG</title>
+<style>
+:root{--ink:#18243d;--panel:rgba(13,24,49,.82);--gold:#ffd978}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101a38;color:white;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+#wrap{position:relative;width:100%;height:100%;display:grid;place-items:center}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+#hud{position:absolute;inset:14px 16px auto;display:flex;gap:10px;align-items:flex-start;pointer-events:none;flex-wrap:wrap}
+.panel{background:var(--panel);border:1px solid #ffffff2e;border-radius:13px;padding:10px 13px;box-shadow:0 8px 25px #07102555;backdrop-filter:blur(6px)}
+.brand{font-weight:900;letter-spacing:.3px;color:#fff2c4;font-size:15px}
+.small{font-size:12px;color:#dce6ff}
+.bar{height:8px;background:#273553;border-radius:9px;overflow:hidden;width:160px;margin-top:5px}
+.fill{height:100%;width:100%;transition:width .12s;border-radius:9px}
+#hp{background:linear-gradient(90deg,#ff5478,#ff8a9c)}#xp{background:linear-gradient(90deg,#8c77ff,#d0a3ff)}
+.stat{font-weight:800;font-size:13px;margin-top:4px}
+#tip{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;max-width:calc(100% - 20px);font-size:12px;color:#f0f4ff;background:#0d1839b8;border:1px solid #ffffff25;border-radius:99px;padding:9px 15px;pointer-events:none}
+#toast{position:absolute;top:112px;left:50%;transform:translateX(-50%);font-size:17px;font-weight:900;color:#fff2b5;text-shadow:0 3px 0 #382e68;pointer-events:none;opacity:0;transition:opacity .2s}
+#start{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#101a3866,#101a38a8);padding:20px}
+.card{max-width:470px;text-align:center;background:#101c3aeb;border:1px solid #ffffff38;border-radius:22px;padding:28px;box-shadow:0 20px 70px #050b1b99}
+.card h1{font-size:clamp(26px,5vw,42px);line-height:1.1;margin:0 0 12px;color:#fff0b2}
+.card p{line-height:1.65;color:#d9e4ff}
+button{background:linear-gradient(135deg,#ffe18a,#ffb74c);border:0;color:#38284a;font-size:16px;font-weight:900;border-radius:12px;padding:13px 24px;cursor:pointer;box-shadow:0 4px 0 #b46c3a}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #b46c3a}
+#touch{display:none;position:absolute;inset:auto 12px 62px;justify-content:space-between;pointer-events:none}
+.pad{display:flex;gap:8px}.touchbtn{pointer-events:auto;min-width:52px;height:52px;border-radius:16px;background:#101c3acc;border:1px solid #ffffff45;color:white;font-weight:900;font-size:20px;display:grid;place-items:center;user-select:none;touch-action:none}
+@media(max-width:700px){#touch{display:flex}#tip{bottom:122px;font-size:10px}.bar{width:112px}#hud{inset:8px 8px auto}.panel{padding:8px 10px}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="game" aria-label="별빛 모험가 횡스크롤 게임"></canvas>
+<div id="hud">
+  <div class="panel"><div class="brand">✦ 별빛 모험가</div><div class="small" id="levelText">Lv. 1 모험가</div><div class="bar"><div class="fill" id="hp"></div></div><div class="small">HP <span id="hpText">100 / 100</span></div></div>
+  <div class="panel"><div class="small">경험치</div><div class="bar"><div class="fill" id="xp"></div></div><div class="small" id="xpText">0 / 100 XP</div></div>
+  <div class="panel"><div class="small">획득 코인</div><div class="stat">🪙 <span id="coins">0</span></div><div class="small">처치 <span id="kills">0</span></div></div>
+</div>
+<div id="toast"></div>
+<div id="tip">이동 A / D 또는 ← / → · 점프 Space / ↑ · 공격 J · 코인과 몬스터를 찾아보세요!</div>
+<div id="touch">
+  <div class="pad"><div class="touchbtn" data-key="ArrowLeft">◀</div><div class="touchbtn" data-key="ArrowRight">▶</div></div>
+  <div class="pad"><div class="touchbtn" data-key="Space">⬆</div><div class="touchbtn" data-key="KeyJ">⚔</div></div>
+</div>
+<div id="start"><div class="card"><h1>별빛 모험가</h1><p>반짝이는 숲을 탐험하고 슬라임을 물리쳐 레벨을 올려 보세요.<br>코인을 모으고 플랫폼을 뛰어넘어 더 멀리 나아가세요!</p><p><b>이동</b> A/D 또는 방향키　<b>점프</b> Space　<b>공격</b> J</p><button id="play">모험 시작하기</button></div></div>
+</div>
+<script>
+(() => {
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+let W=innerWidth,H=innerHeight,dpr=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*dpr);canvas.height=Math.floor(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+const keys={}; let running=false, last=0, camera=0, time=0, shake=0;
+const world={width:5200,ground:0};
+const player={x:100,y:0,vx:0,vy:0,w:30,h:43,face:1,onGround:false,hp:100,maxHp:100,level:1,xp:0,nextXp:100,coins:0,kills:0,attack:0,invuln:0,anim:0};
+const platforms=[
+{x:0,y:0,w:700},{x:760,y:0,w:400},{x:1250,y:0,w:550},{x:1880,y:0,w:420},{x:2400,y:0,w:550},{x:3060,y:0,w:450},{x:3620,y:0,w:500},{x:4230,y:0,w:970},
+{x:300,y:-105,w:130},{x:510,y:-175,w:120},{x:880,y:-125,w:150},{x:1070,y:-205,w:120},{x:1400,y:-130,w:130},{x:1580,y:-210,w:150},{x:1980,y:-115,w:150},{x:2180,y:-190,w:120},{x:2550,y:-140,w:150},{x:2780,y:-225,w:130},{x:3210,y:-125,w:130},{x:3400,y:-205,w:150},{x:3750,y:-135,w:140},{x:3990,y:-220,w:120},{x:4400,y:-145,w:160},{x:4700,y:-225,w:150}
+].map(p=>({...p,y:H*.78+p.y}));
+let enemies=[],coins=[],particles=[];
+function groundY(){return H*.78}
+function populate(){
+ enemies=[];coins=[];particles=[];
+ for(let x=350;x<world.width-180;x+=300+Math.random()*210){
+   enemies.push({x,y:groundY()-28,hp:2,maxHp:2,vx:(Math.random()>.5?1:-1)*(.45+Math.random()*.45),home:x,phase:Math.random()*6,hit:0});
+ }
+ for(let x=220;x<world.width-100;x+=100+Math.random()*110){
+   let p=platforms.filter(p=>p.x<=x&&p.x+p.w>=x+10).sort((a,b)=>a.y-b.y)[0];
+   let y=p?p.y-24:groundY()-35;
+   coins.push({x,y,got:false,phase:Math.random()*6});
+ }
+}
+function reset(){Object.assign(player,{x:100,y:groundY()-43,vx:0,vy:0,hp:100,maxHp:100,level:1,xp:0,nextXp:100,coins:0,kills:0,attack:0,invuln:0,anim:0});camera=0;populate();updateHud()}
+function updateHud(){document.getElementById('hp').style.width=100*player.hp/player.maxHp+'%';document.getElementById('hpText').textContent=Math.ceil(player.hp)+' / '+player.maxHp;document.getElementById('xp').style.width=100*player.xp/player.nextXp+'%';document.getElementById('xpText').textContent=player.xp+' / '+player.nextXp+' XP';document.getElementById('levelText').textContent='Lv. '+player.level+' 모험가';document.getElementById('coins').textContent=player.coins;document.getElementById('kills').textContent=player.kills}
+let toastTimer=0;function toast(s){const el=document.getElementById('toast');el.textContent=s;el.style.opacity=1;toastTimer=1.6}
+function levelUp(){player.level++;player.xp-=player.nextXp;player.nextXp=Math.round(player.nextXp*1.35);player.maxHp+=15;player.hp=player.maxHp;toast('✨ 레벨 업! Lv. '+player.level);burst(player.x+15,player.y+15,'#ffe58d',25);updateHud()}
+function burst(x,y,color,n=8){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*5,vy:(Math.random()-.8)*5,life:.5+Math.random()*.5,color,size:2+Math.random()*4})}
+function rect(x,y,w,h,c,r=0){ctx.fillStyle=c;if(r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}else ctx.fillRect(x,y,w,h)}
+function drawBackground(){
+ let gy=groundY();
+ let sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#182b58');sky.addColorStop(.55,'#405f9c');sky.addColorStop(1,'#f3a8a4');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ // moon
+ ctx.fillStyle='#fff0c7';ctx.beginPath();ctx.arc(W*.78, H*.18, 28,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffffff25';ctx.beginPath();ctx.arc(W*.78-10,H*.18-6,38,0,Math.PI*2);ctx.fill();
+ // stars
+ for(let i=0;i<70;i++){let x=((i*137+35-camera*.08)%(W+30)+W+30)%(W+30),y=(i*71)%Math.max(100,gy*.7);ctx.globalAlpha=.35+.35*Math.sin(time*2+i);ctx.fillStyle='#fff';ctx.fillRect(x,y,2,2)}ctx.globalAlpha=1;
+ // distant hills
+ for(let layer=0;layer<3;layer++){
+  let par=[.12,.23,.36][layer],base=gy-[80,35,0][layer];ctx.beginPath();ctx.moveTo(0,H);
+  for(let x=-80;x<W+100;x+=80){let wx=x+camera*par;let y=base-Math.sin(wx*.006+layer)*38-Math.sin(wx*.015)*18;ctx.lineTo(x,y)}
+  ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=['#354c83','#263e69','#20385b'][layer];ctx.fill();
+ }
+ // forest silhouettes
+ for(let i=-2;i<W/75+4;i++){let x=i*75-(camera*.55%75),y=gy-15;ctx.fillStyle=i%2?'#1b3453':'#1d3b57';ctx.fillRect(x+27,y-65,12,65);ctx.beginPath();ctx.moveTo(x-5,y-40);ctx.lineTo(x+33,y-105);ctx.lineTo(x+70,y-40);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(x+2,y-20);ctx.lineTo(x+33,y-78);ctx.lineTo(x+65,y-20);ctx.closePath();ctx.fill()}
+}
+function drawPlatform(p){let x=p.x-camera;if(x+p.w<-20||x>W+20)return;rect(x,p.y,p.w,15,'#674f78',5);rect(x,p.y,p.w,7,'#70d69c',4);for(let i=0;i<p.w;i+=28)rect(x+i+5,p.y+9,12,3,'#94719b',2)}
+function drawCoin(c){if(c.got)return;let bob=Math.sin(time*4+c.phase)*4,x=c.x-camera,y=c.y+bob;ctx.save();ctx.translate(x,y);ctx.scale(.7+Math.abs(Math.sin(time*4+c.phase))*.3,1);ctx.fillStyle='#ffcf55';ctx.beginPath();ctx.ellipse(0,0,8,11,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff0a0';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff1ad';ctx.fillRect(-2,-5,3,10);ctx.restore()}
+function drawEnemy(e){let x=e.x-camera,y=e.y;if(x<-50||x>W+50)return;ctx.save();ctx.translate(x+14,y+14);let bob=Math.sin(time*5+e.phase)*2;ctx.translate(0,bob);ctx.fillStyle=e.hit>0?'#fff':'#8ce77d';ctx.beginPath();ctx.ellipse(0,0,17,14,0,Math.PI,Math.PI*2);ctx.lineTo(17,3);ctx.quadraticCurveTo(0,23,-17,3);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-5,-2,4,5,0,0,Math.PI*2);ctx.ellipse(5,-2,4,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#263451';ctx.fillRect(-6,-1,2,4);ctx.fillRect(4,-1,2,4);if(e.hp<e.maxHp){rect(-14,-23,28,4,'#392d52',2);rect(-14,-23,28*e.hp/e.maxHp,4,'#ff718d',2)}ctx.restore()}
+function drawPlayer(){let x=player.x-camera,y=player.y;ctx.save();ctx.translate(x+player.w/2,y+player.h/2);if(player.face<0)ctx.scale(-1,1);let run=Math.abs(player.vx)>.5?Math.sin(player.anim*13)*4:0;
+ // shadow
+ ctx.fillStyle='#0b183a55';ctx.beginPath();ctx.ellipse(0,player.h/2+1,17,4,0,0,Math.PI*2);ctx.fill();
+ // legs / boots
+ rect(-10,5+run,8,15,'#4c5f9b',3);rect(2,5-run,8,15,'#4c5f9b',3);rect(-12,17+run,11,5,'#f5c46c',2);rect(1,17-run,12,5,'#f5c46c',2);
+ // cape
+ ctx.fillStyle='#e75f83';ctx.beginPath();ctx.moveTo(-7,-12);ctx.lineTo(-17,11+run);ctx.lineTo(-4,7);ctx.closePath();ctx.fill();
+ // body
+ rect(-10,-13,20,22,'#5d8cff',5);rect(-7,-10,14,7,'#9dd9ff',3);
+ // head
+ ctx.fillStyle='#ffd4b0';ctx.beginPath();ctx.arc(0,-18,11,0,Math.PI*2);ctx.fill();
+ // hair
+ ctx.fillStyle='#56385e';ctx.beginPath();ctx.arc(0,-21,11,Math.PI,Math.PI*2);ctx.lineTo(11,-17);ctx.lineTo(5,-20);ctx.lineTo(1,-14);ctx.lineTo(-4,-20);ctx.lineTo(-10,-16);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#263451';ctx.fillRect(3,-19,2,3);
+ // sword slash
+ if(player.attack>0){ctx.strokeStyle='#fff4ad';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.arc(15,-5,25,-1.25,.7);ctx.stroke();ctx.strokeStyle='#9ee9ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(15,-5,30,-1.25,.7);ctx.stroke()}
+ ctx.restore();
+ if(player.invuln>0&&Math.floor(time*18)%2===0){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.strokeRect(x-4,y-4,player.w+8,player.h+8)}
+}
+function update(dt){
+ time+=dt;if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)document.getElementById('toast').style.opacity=0}
+ const left=keys.ArrowLeft||keys.KeyA,right=keys.ArrowRight||keys.KeyD;
+ if(left){player.vx-=.7*dt*60;player.face=-1}if(right){player.vx+=.7*dt*60;player.face=1}
+ player.vx*=Math.pow(player.onGround?.78:.94,dt*60);player.vx=Math.max(-4.8,Math.min(4.8,player.vx));
+ if(keys.Space||keys.ArrowUp||keys.KeyW){if(player.onGround){player.vy=-11.8;player.onGround=false;burst(player.x+15,player.y+42,'#b9e8ff',5)}}
+ player.vy+=.58*dt*60;player.x+=player.vx*dt*60;player.y+=player.vy*dt*60;player.x=Math.max(0,Math.min(world.width-player.w,player.x));
+ let oldBottom=player.y+player.h;player.onGround=false;
+ for(let p of platforms){if(player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+7&&player.y+player.h>=p.y&&player.vy>=0){player.y=p.y-player.h;player.vy=0;player.onGround=true}}
+ if(player.y+player.h>=groundY()){player.y=groundY()-player.h;player.vy=0;player.onGround=true}
+ player.anim+=dt;player.attack=Math.max(0,player.attack-dt*2.8);player.invuln=Math.max(0,player.invuln-dt);
+ for(let c of coins){if(!c.got&&Math.abs(player.x+15-c.x)<25&&Math.abs(player.y+20-c.y)<35){c.got=true;player.coins++;player.xp+=8;burst(c.x,c.y,'#ffdb62',8);if(player.xp>=player.nextXp)levelUp();updateHud()}}
+ for(let e of enemies){if(e.hp<=0)continue;e.x+=e.vx*dt*60;if(Math.abs(e.x-e.home)>65)e.vx*=-1;e.hit=Math.max(0,e.hit-dt*5);
+  if(player.attack>0&&Math.abs((player.x+15)-e.x)<48&&Math.abs((player.y+22)-e.y)<45&&e.hp===e.maxHp){e.hp--;e.hit=.18;burst(e.x,e.y,'#d4ffb1',7);if(e.hp<=0){player.kills++;player.xp+=30;player.coins+=3;burst(e.x,e.y,'#a9f58d',16);toast('+30 XP · 슬라임 처치!');if(player.xp>=player.nextXp)levelUp();updateHud()}}
+  if(e.hp>0&&player.invuln<=0&&Math.abs((player.x+15)-e.x)<27&&Math.abs((player.y+22)-e.y)<32){player.hp-=12;player.invuln=1.1;player.vx=player.x<e.x?-5:5;player.vy=-5;shake=8;burst(player.x+15,player.y+20,'#ff7797',9);updateHud();if(player.hp<=0){player.hp=0;updateHud();gameOver()}}
+ }
+ for(let p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.life-=dt}
+ particles=particles.filter(p=>p.life>0);camera=Math.max(0,Math.min(world.width-W,player.x-W*.38));shake=Math.max(0,shake-dt*25);
+}
+function render(){
+ ctx.save();if(shake)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);drawBackground();
+ // platforms use world y relative to current viewport height
+ for(let p of platforms)drawPlatform(p);
+ // foreground ground
+ rect(-camera,groundY(),world.width, H-groundY()+30,'#23465a');rect(-camera,groundY(),world.width,9,'#6bc78f');
+ for(let x=Math.floor(camera/35)*35;x<camera+W+40;x+=35){rect(x-camera,groundY()+20+(x%3)*4,18,3,'#32677a',2)}
+ coins.forEach(drawCoin);enemies.forEach(drawEnemy);drawPlayer();
+ for(let p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x-camera,p.y,p.size,p.size)}ctx.globalAlpha=1;
+ // zone marker
+ if(player.x>world.width-350){ctx.fillStyle='#fff0b5';ctx.font='bold 18px system-ui';ctx.textAlign='center';ctx.fillText('별빛 숲의 끝에 도착!',W/2,90)}
+ ctx.restore();
+}
+let over=false;
+function gameOver(){over=true;running=false;document.getElementById('start').style.display='flex';document.querySelector('#start h1').textContent='다시 도전해 볼까요?';document.querySelector('#start p').innerHTML='슬라임에게 쓰러졌어요.<br>레벨 '+player.level+' · 코인 '+player.coins+'개 · 처치 '+player.kills+'마리';document.getElementById('play').textContent='다시 모험하기'}
+function loop(ts){if(!running)return;let dt=Math.min(.032,(ts-last)/1000||.016);last=ts;update(dt);render();requestAnimationFrame(loop)}
+function start(){reset();over=false;running=true;document.getElementById('start').style.display='none';last=performance.now();requestAnimationFrame(loop)}
+document.getElementById('play').addEventListener('click',start);
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if((e.code==='KeyJ'||e.code==='KeyX')&&running&&player.attack<=0){player.attack=.35;for(let en of enemies){if(en.hp>0&&Math.abs(player.x+15-en.x)<52&&Math.abs(player.y+22-en.y)<50){en.hp--;en.hit=.2;burst(en.x,en.y,'#d4ffb1',7);if(en.hp<=0){player.kills++;player.xp+=30;player.coins+=3;toast('+30 XP · 슬라임 처치!');if(player.xp>=player.nextXp)levelUp();updateHud()}}}}});
+addEventListener('keyup',e=>keys[e.code]=false);
+document.querySelectorAll('.touchbtn').forEach(b=>{let k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId);if(k==='KeyJ'&&running){player.attack=.35;for(let en of enemies)if(en.hp>0&&Math.abs(player.x+15-en.x)<52&&Math.abs(player.y+22-en.y)<50){en.hp--;en.hit=.2;if(en.hp<=0){player.kills++;player.xp+=30;player.coins+=3;toast('+30 XP · 슬라임 처치!');if(player.xp>=player.nextXp)levelUp();updateHud()}}}});['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false))});
+reset();render();
+})();
+</script>
+</body>
+</html>
