@@ -1,213 +1,30 @@
+# 미니 메이플스토리 — GitHub Pages용 Web Port
 
-  # 미니메이플스토리
- 1. JAVA언어를 공부하면서 평소 좋아하던 게임을 만들자는 생각에 메이플스토리를 모티브삼아 프로젝트를 제작하게 되었습니다. 제작 기간은 2주정도 걸렸고 총 3명이 합작하여 만들었습니다
+이 ZIP은 `KuTaeMo/JavaProject`의 README에 설명된 주요 게임 요소(인트로/암호, 플레이어 이동과 점프, 몬스터, 공격·스킬, 포인트, 레벨업, 보스)를 참고해 브라우저에서 실행되도록 HTML5 Canvas와 JavaScript로 재구성한 버전입니다.
 
- - Git-Hub주소 - https://github.com/KuTaeMo/JavaProject/tree/master
+> **중요:** 원본 Java 저장소의 실제 소스와 이미지 파일을 이 작업 환경에서 직접 내려받지 못해, Java 파일을 기계적으로 1:1 변환한 것은 아닙니다. 캐릭터·몬스터 그래픽은 이 웹 버전에 포함된 Canvas 도형으로 새로 그렸습니다. 원본 이미지와 세부 동작까지 동일하게 맞추려면 원본 저장소 ZIP을 추가로 제공해 주세요.
 
+## 실행 방법
+- `index.html`을 브라우저에서 열면 실행됩니다.
+- 시작 암호는 `maple`입니다.
+- 키보드: `←` / `→` 이동, `↑` 또는 `Space` 점프, `Z` 기본 공격, `X` 스킬(MP 10), `↓` 보스룸 진입(포인트 120 이상).
+- 휴대폰에서는 화면 아래의 터치 버튼을 사용할 수 있습니다.
 
- - 만들고 싶었던 모티브
+## GitHub Pages 배포
+1. ZIP 압축을 풉니다.
+2. GitHub에서 `KuTaeMo/JavaProject` 저장소를 엽니다.
+3. 기존 Java 프로젝트를 보존하려면 먼저 별도 브랜치(예: `web-port`)를 만듭니다. 기존 파일을 교체하려는 경우에는 로컬 백업을 먼저 만드세요.
+4. 이 ZIP 안의 `index.html`, `style.css`, `game.js`, `README.md`, `.nojekyll`을 저장소 루트에 업로드합니다. 폴더째로 업로드하지 말고 `index.html`이 저장소 최상위에 위치하게 합니다.
+5. **Settings → Pages**에서 `Deploy from a branch`를 선택하고 브랜치(예: `main` 또는 `web-port`)와 폴더 `/ (root)`를 지정한 뒤 저장합니다.
+6. Pages 배포가 완료되면 GitHub 사용자명과 저장소명을 붙인 `https://kutaemo.github.io/JavaProject/` 형식의 주소에서 확인합니다. (사용자명 대소문자는 URL에서 보통 구분되지 않습니다.)
 
-<img src="https://blog.kakaocdn.net/dn/nHNsc/btqCy4ZVqWE/5SY5SCDtkc7TNQnu7N2G30/img.png"  width="600" height="370">
+## 파일 구성
+- `index.html`: 게임 화면과 HUD, 시작 화면, 터치 조작
+- `style.css`: 반응형 UI 스타일
+- `game.js`: 게임 루프, 이동/점프, 몬스터 AI, 공격/스킬, 경험치/레벨, 코인, 보스룸
+- `.nojekyll`: GitHub Pages에서 Jekyll 처리를 건너뛰도록 하는 파일
 
-
- ## 실제 구현한 모습
- 
- - 시작 화면
- <div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_172.png?raw=true"  width="450" height="370"> <img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_173.png?raw=true"  width="450" height="370">	
-</div>
-<br>
-
-- 로그인 화면
-<div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_174.png?raw=true"  width="450" height="370">
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_175.png?raw=true"  width="450" height="370">
-</div>
-<br>
-
-- 실행 화면
-<div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_176.png?raw=true"  width="600" height="370">
-</div>
-<br>
-
-- 공격 및 스킬
-<div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_178.png?raw=true"  width="450" height="370"> <img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_177.png?raw=true"  width="450" height="370">
-</div>
-<br>
-
-- 보스
-<div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_179.png?raw=true"  width="450" height="370"> <img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_180.png?raw=true"  width="450" height="370">
-</div>
-<br>
-
-- 죽음
-<div>
-	<img src="https://github.com/KuTaeMo/JavaProject/blob/master/introImage/Screenshot_181.png?raw=true"  width="600" height="370">
-</div>
-<br>
-
-## 설치 및 실행
-1. 설치
- - SpringToolSuite4.exe툴을 사용하여 제작했으며, 위의 파일을 다운받아서 export하시면 되겠습니다.
- - 이클립스도 실행이 될 것 같지만 SpringToolSuite4를 사용하시는걸 권장합니다.
-2. 실행
- - Loading클래스를 Run해서 실행 시키면 게임을 진행 할 수 있습니다.
-
-
-## 중요클래스에 대한 설명
-
- - [Player](#player)
- - [MapleApp](#mapleapp)
- - [Loading](#loading)
- - [Enemy](#enemy)
- - [GamePoint](#gamepoint)
- - [Skill](#skill)
- - [Enemy클래스를 상속받는 몬스터클래스](#monster)
-
-## Player
- - 사용자가 플레이하는 플레이어 JLabel클래스, 클래스 내부에는 플레이어가 움직일 수 있는 좌, 우, 점프 등의 메소드가 존재 스레드 사용이 많다보니 작은 렉이 발생
- 아래와 같이 움직이는 소스코드가 주된 메소드이다. 맵에 맞췄기 때문에 점프할때의 위치 요소들이 크게 작용 (아래는 오른족으로 이동할때의 메소드)
-``` JAVA
-public void moveRight1() {
-      if (isRight == false) {
-         new Thread(new Runnable() {
-            @Override
-            public void run() {
-               seewhere = true;
-               isRight = true;
-               while (isRight && hp > 0) {
-                  moveRangeR();
-                  // 오른쪽으로 보는중
-                  setLocation(x, y); // 내부에 repaint() 존재
-                  try {
-                     Thread.sleep(3);
-                     setIcon(icPlayerW);
-                     Thread.sleep(3);
-                     setIcon(icPlayerR);
-
-                  } catch (InterruptedException e) {
-                     e.printStackTrace();
-                  }
-               }
-               setIcon(icPlayerW);
-
-            }
-         }).start();
-      }
-   }
-```
-
-## MapleApp
- - 게임이 실행되는 틀 JFrame 여기에서 게임이 진행. 공격했을때의 충돌을 검사하는 메소드나, 다른 모든 객체를 생성, HP,MP검사등을 함. 마찬가지로 Thread사용이 많아 잦은 렉이 발생
- 중요 코드로는 플레이어와 몬스터 간 거리를 계산하여 충돌을 검사하는 메소드가 존재
- 
-``` JAVA
-	public boolean crash(int playerX, int playerY, int enemyX, int enemyY, int playerW, int playerH, int enemyW,
-			int enemyH) {
-		boolean check = false;
-		if (Math.abs((playerX + (playerW / 2)) - (enemyX + enemyW / 2 + 20)) < (enemyW / 2 + playerW / 2 - 60)
-				&& Math.abs((playerY + playerH / 2) - (enemyY + enemyH / 2)) < (enemyH / 2 + playerH / 2)) {
-			check = true;
-		} else {
-			check = false;
-		}
-		return check;
-	}
-```
-  
-## Loading
- - 게임이 시작전 인트로 역할 (비밀번호 : maple)
-
-## Enemy
- - 몬스터들이 상속해야하는 JLable 추상클래스 나머지 몬스터들은 이 클래스 형식에 맞춰서 제작
- 상속 받는 행위, 상태
- 
-``` JAVA
- 
-	Enemy enemy = this;
-	ImageIcon enemyMove;
-	final static String TAG = "Enemy : ";
-	//좌표값
-	int x;
-	int y;
-	int speed;
-	int moveState;
-	int hp;
-	int width;
-	int height;
-	String name;
-	Random random = new Random();
-	Timer timer = new Timer();
-```
- 
-``` JAVA
- 
-	public Enemy() {
-		
-	}
-	public Enemy(String string, int x, int y) {
-		
-	}
-	public void moveChange(){
-		
-	}
-	public void moveDirection() {
-		
-	}
-```
- 
-## GamePoint
- - 게임이 시작하고 몬스터를 처치함에 따라 올라가는 포인트 점수, 일정 포인트 이상으로 오르면 보스룸 입장
- 
-## Skill
- - 스킬을 사용했을때 나오는 스킬 JLabel 스킬또한 하나의 객체로 인식하여 몬스터간 거리를 계산, 충돌하는 클래스
-스킬 클래스의 메소드 일부 움직임은 플레이어의 이동과 비슷
-
-``` JAVA
- public void Col(ArrayList<Enemy> enemy) {
-      for (int i = 0; i < enemy.size(); i++) {
-	 if (crash(this.x, this.y, enemy.get(i).x, enemy.get(i).y, this.width, this.height, enemy.get(i).width,
-	       enemy.get(i).height)) {
-	    System.out.println("스킬 적중!");
-	    this.isSkill = false;
-	    setIcon(null);
-	    enemy.get(i).hp -= 20;
-	    System.out.println(enemy.get(i).name + " hp :" + enemy.get(i).hp);
-```
-        
-## Enemy클래스를 상속받는 몬스터클래스
-  - 머쉬맘, 스톤골렘, 발록등의 몬스터가 존재하며 Enemy클래스를 상속받는 클래스
-  랜덤하게 움직여야 하기 때문에 움직임을 랜덤하게 동작하는 행위가 존재
-  - 현재 시간값을 사용하여 변칙적인 행동을 가능하게 함
-  
-``` JAVA
-  
- 	 public void moveChange() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				while(true) {
-					
-					long n = System.currentTimeMillis()/1000;
-					if(n % 5 == 0) {
-						speed = 100;
-						moveState = random.nextInt(3);
-					}
-					speed = 5;	
-				}	
-			}
-		}).start();
-	}
-```
-
-## 만들어본 후기
- - 무슨 게임을 할지 생각하다가 예전에 존재했던 주니어네이버의 메이플스토리 미니게임이 생각이 나서 만들어 보았다. 각 객체들을 따로따로 움직이게 해야하고 움직임에대한 모션, 충돌같은 검사 같은 요소들이 생각만큼 쉽지 않았다. 하지만 3명이서 각각 역할을 나누어 제작하다보니 혼자서 프로젝트를 진행 했을때 보다 안정적이고 빠르게 제작할 수 있었다. 자바 언어로 게임을 만든게 처음이라 많이 부족하지만 개발자로서의 큰 한걸음이 되었음을 느낀다.
-
-## 부족한점
- - 플레이어가 움직일때의 모션이라던지, 맞았을 때의 이펙트, 스레드를 사용할때의 렉발생 등이 많이 부족했다. 
-
-
-
+## 문제 해결
+- 화면이 비어 있으면 `index.html`, `style.css`, `game.js`가 같은 폴더에 있는지 확인합니다.
+- Pages 주소에서 404가 뜨면 Settings → Pages의 배포 브랜치/폴더와 Actions 탭의 배포 상태를 확인합니다.
+- 변경 사항이 반영되지 않으면 새로고침하거나 강력 새로고침(`Ctrl + F5`)을 해보세요.
